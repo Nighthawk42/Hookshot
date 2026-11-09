@@ -94,7 +94,9 @@ you start the game from its launcher, which also updates it.
    ticked: untick them if you don't want them.
 
 Next time, start the game from the Hookshot shortcut, or `hookshot.exe` in the game folder. That is the launcher: it
-has **Play**, and **Update** when a newer release is out.
+has **Play**, and **Update** when a newer release is out. Its **Graphics**, **Gameplay** and **Controls** pages hold the
+same settings as the [in-game menu](#in-game-menu), with every button and key remappable, and **System** sets the game's
+language. They are saved to `hookshot_options.ini` and `language.txt` before the game starts.
 
 The first start prepares the game's shaders, which takes a while. Later starts are faster.
 

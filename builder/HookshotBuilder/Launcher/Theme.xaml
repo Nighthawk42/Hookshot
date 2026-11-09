@@ -1,0 +1,549 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- The launcher's look: a forest at night, gold leaf and parchment. Cinzel (SIL OFL, Fonts/Cinzel-LICENSE.txt) for display -->
+  <Color x:Key="NightColor">#0A1410</Color>
+  <Color x:Key="GoldColor">#D9B45A</Color>
+  <Color x:Key="EmeraldColor">#46B07C</Color>
+
+  <SolidColorBrush x:Key="ZNight" Color="#0A1410"/>
+  <SolidColorBrush x:Key="ZRail" Color="#08100D"/>
+  <SolidColorBrush x:Key="ZPanel" Color="#0F1E18"/>
+  <SolidColorBrush x:Key="ZPanelHover" Color="#15291F"/>
+  <SolidColorBrush x:Key="ZWell" Color="#07100C"/>
+  <SolidColorBrush x:Key="ZGold" Color="#D9B45A"/>
+  <SolidColorBrush x:Key="ZGoldBright" Color="#F3D98F"/>
+  <SolidColorBrush x:Key="ZGoldDim" Color="#8A7240"/>
+  <SolidColorBrush x:Key="ZGoldLine" Color="#40D9B45A"/>
+  <SolidColorBrush x:Key="ZGoldFaint" Color="#1FD9B45A"/>
+  <SolidColorBrush x:Key="ZInk" Color="#EEE5CC"/>
+  <SolidColorBrush x:Key="ZInkSoft" Color="#B3AA90"/>
+  <SolidColorBrush x:Key="ZInkFaint" Color="#7C7562"/>
+  <SolidColorBrush x:Key="ZEmerald" Color="#46B07C"/>
+  <SolidColorBrush x:Key="ZEmeraldSoft" Color="#2646B07C"/>
+  <SolidColorBrush x:Key="ZRuby" Color="#D9705A"/>
+  <SolidColorBrush x:Key="ZRubySoft" Color="#26D9705A"/>
+
+  <LinearGradientBrush x:Key="ZGoldLeaf" StartPoint="0,0" EndPoint="0,1">
+    <GradientStop Color="#F6DE97" Offset="0"/>
+    <GradientStop Color="#D9B45A" Offset="0.5"/>
+    <GradientStop Color="#A9843A" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="ZGoldLeafHover" StartPoint="0,0" EndPoint="0,1">
+    <GradientStop Color="#FFEBB0" Offset="0"/>
+    <GradientStop Color="#E8C46A" Offset="0.5"/>
+    <GradientStop Color="#B8934A" Offset="1"/>
+  </LinearGradientBrush>
+
+  <FontFamily x:Key="ZDisplay">pack://application:,,,/Fonts/#Cinzel</FontFamily>
+
+  <!-- (the templates' ContentPresenters hold an empty TextBlock style: App.xaml's would otherwise set the text's font and colour in them) -->
+  <Style TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Ui}"/>
+    <Setter Property="FontSize" Value="14"/>
+    <Setter Property="Foreground" Value="{StaticResource ZInk}"/>
+    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
+  </Style>
+
+  <Style x:Key="ZTitle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+    <Setter Property="FontFamily" Value="{StaticResource ZDisplay}"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="FontSize" Value="26"/>
+    <Setter Property="Foreground" Value="{StaticResource ZGold}"/>
+  </Style>
+
+  <!-- small capitals with air between the letters: section names -->
+  <Style x:Key="ZEyebrow" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+    <Setter Property="FontFamily" Value="{StaticResource ZDisplay}"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Foreground" Value="{StaticResource ZGoldDim}"/>
+  </Style>
+
+  <Style x:Key="ZSoft" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Foreground" Value="{StaticResource ZInkSoft}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+
+  <Style x:Key="ZFaint" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Foreground" Value="{StaticResource ZInkFaint}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+
+  <!-- a framed panel: the dark well with a gold hairline -->
+  <Style x:Key="ZCard" TargetType="Border">
+    <Setter Property="Background" Value="#990F1E18"/>
+    <Setter Property="BorderBrush" Value="{StaticResource ZGoldLine}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="6"/>
+  </Style>
+
+  <!-- the side's pages -->
+  <Style x:Key="ZNav" TargetType="RadioButton">
+    <Setter Property="Foreground" Value="{StaticResource ZInkSoft}"/>
+    <Setter Property="FontFamily" Value="{StaticResource ZDisplay}"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="FontSize" Value="14"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Height" Value="46"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="GroupName" Value="ZNavGroup"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Grid Background="Transparent">
+            <Border x:Name="Glow" Opacity="0">
+              <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                  <GradientStop Color="#33D9B45A" Offset="0"/>
+                  <GradientStop Color="#00D9B45A" Offset="1"/>
+                </LinearGradientBrush>
+              </Border.Background>
+            </Border>
+            <Rectangle x:Name="Bar" Width="3" HorizontalAlignment="Left" Fill="{StaticResource ZGoldLeaf}" Opacity="0"/>
+            <Border x:Name="Focus" BorderBrush="{StaticResource ZGold}" BorderThickness="1" Opacity="0" Margin="2"/>
+            <StackPanel Orientation="Horizontal" Margin="26,0,0,0" VerticalAlignment="Center">
+              <Path x:Name="Icon" Data="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" Width="18" Height="18" Stretch="Uniform"
+                    Fill="{TemplateBinding Foreground}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+              <ContentPresenter VerticalAlignment="Center"><ContentPresenter.Resources><Style TargetType="TextBlock"/></ContentPresenter.Resources></ContentPresenter>
+            </StackPanel>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter Property="Foreground" Value="{StaticResource ZInk}"/>
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter Property="Foreground" Value="{StaticResource ZGoldBright}"/>
+              <Setter TargetName="Glow" Property="Opacity" Value="1"/>
+              <Setter TargetName="Bar" Property="Opacity" Value="1"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Focus" Property="Opacity" Value="0.7"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- gold leaf: Play -->
+  <Style x:Key="ZPlay" TargetType="Button">
+    <Setter Property="Foreground" Value="#2A1E06"/>
+    <Setter Property="FontFamily" Value="{StaticResource ZDisplay}"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="FontSize" Value="20"/>
+    <Setter Property="Height" Value="58"/>
+    <Setter Property="MinWidth" Value="220"/>
+    <Setter Property="Padding" Value="34,0"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Grid>
+            <Border x:Name="Box" Background="{StaticResource ZGoldLeaf}" BorderBrush="#FFF3D98F" BorderThickness="1" CornerRadius="4">
+              <Border.Effect><DropShadowEffect Color="#D9B45A" BlurRadius="34" ShadowDepth="0" Opacity="0.45"/></Border.Effect>
+            </Border>
+            <!-- the inner rule, as on a gilded frame -->
+            <Border BorderBrush="#66513A0E" BorderThickness="1" CornerRadius="2" Margin="4"/>
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"><ContentPresenter.Resources><Style TargetType="TextBlock"/></ContentPresenter.Resources></ContentPresenter>
+            <Border x:Name="Focus" BorderBrush="{StaticResource ZInk}" BorderThickness="2" CornerRadius="6" Margin="-4" Opacity="0"/>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Box" Property="Background" Value="{StaticResource ZGoldLeafHover}"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="Box" Property="Opacity" Value="0.85"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Focus" Property="Opacity" Value="1"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Box" Property="Background" Value="#332A2414"/>
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ZGoldLine}"/>
+              <Setter TargetName="Box" Property="Effect" Value="{x:Null}"/>
+              <Setter Property="Foreground" Value="{StaticResource ZInkFaint}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- a gold outline: Update, Reset -->
+  <Style x:Key="ZOutline" TargetType="Button">
+    <Setter Property="Foreground" Value="{StaticResource ZGold}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{StaticResource ZGoldDim}"/>
+    <Setter Property="FontFamily" Value="{StaticResource Ui}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Height" Value="38"/>
+    <Setter Property="Padding" Value="18,0"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Box" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                  CornerRadius="4" Padding="{TemplateBinding Padding}">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"><ContentPresenter.Resources><Style TargetType="TextBlock"/></ContentPresenter.Resources></ContentPresenter>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Box" Property="Background" Value="{StaticResource ZGoldFaint}"/>
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ZGold}"/>
+              <Setter Property="Foreground" Value="{StaticResource ZGoldBright}"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ZGoldBright}"/>
+              <Setter TargetName="Box" Property="BorderThickness" Value="2"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Foreground" Value="{StaticResource ZInkFaint}"/>
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ZGoldFaint}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- emerald: an update to take -->
+  <Style x:Key="ZUpdate" TargetType="Button" BasedOn="{StaticResource ZOutline}">
+    <Setter Property="Foreground" Value="{StaticResource ZEmerald}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource ZEmerald}"/>
+    <Setter Property="Background" Value="{StaticResource ZEmeraldSoft}"/>
+    <Setter Property="Height" Value="58"/>
+    <Setter Property="FontSize" Value="15"/>
+    <Setter Property="Padding" Value="26,0"/>
+  </Style>
+
+  <Style x:Key="ZLink" TargetType="Button">
+    <Setter Property="Foreground" Value="{StaticResource ZInkSoft}"/>
+    <Setter Property="FontFamily" Value="{StaticResource Ui}"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Box" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,1" Padding="0,2">
+            <ContentPresenter><ContentPresenter.Resources><Style TargetType="TextBlock"/></ContentPresenter.Resources></ContentPresenter>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter Property="Foreground" Value="{StaticResource ZGoldBright}"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ZGold}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- one choice of a few, side by side -->
+  <Style x:Key="ZSegment" TargetType="RadioButton">
+    <Setter Property="Foreground" Value="{StaticResource ZInkSoft}"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Border x:Name="Box" Background="Transparent" CornerRadius="3" Padding="14,0" MinWidth="60" Height="32" BorderThickness="1" BorderBrush="Transparent">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"><ContentPresenter.Resources><Style TargetType="TextBlock"/></ContentPresenter.Resources></ContentPresenter>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter Property="Foreground" Value="{StaticResource ZInk}"/>
+              <Setter TargetName="Box" Property="Background" Value="{StaticResource ZGoldFaint}"/>
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Box" Property="Background" Value="{StaticResource ZGoldLeaf}"/>
+              <Setter Property="Foreground" Value="#2A1E06"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ZGoldBright}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- on and off -->
+  <Style x:Key="ZSwitch" TargetType="CheckBox">
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="CheckBox">
+          <StackPanel Orientation="Horizontal" Background="Transparent">
+            <TextBlock x:Name="State" Text="Off" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource ZInkFaint}" VerticalAlignment="Center"
+                       Margin="0,0,12,0" Width="26" TextAlignment="Right"/>
+            <Grid Width="48" Height="26">
+              <Border x:Name="Track" CornerRadius="13" Background="{StaticResource ZWell}" BorderBrush="{StaticResource ZGoldDim}" BorderThickness="1"/>
+              <Ellipse x:Name="Knob" Width="18" Height="18" HorizontalAlignment="Left" Margin="4,0,0,0" Fill="{StaticResource ZInkFaint}"/>
+            </Grid>
+          </StackPanel>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Track" Property="Background" Value="{StaticResource ZGoldLeaf}"/>
+              <Setter TargetName="Track" Property="BorderBrush" Value="{StaticResource ZGoldBright}"/>
+              <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right"/>
+              <Setter TargetName="Knob" Property="Margin" Value="0,0,4,0"/>
+              <Setter TargetName="Knob" Property="Fill" Value="#2A1E06"/>
+              <Setter TargetName="State" Property="Text" Value="On"/>
+              <Setter TargetName="State" Property="Foreground" Value="{StaticResource ZGold}"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Track" Property="BorderBrush" Value="{StaticResource ZGold}"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Track" Property="BorderThickness" Value="2"/>
+              <Setter TargetName="Track" Property="BorderBrush" Value="{StaticResource ZGoldBright}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="ZChoiceItem" TargetType="ComboBoxItem">
+    <Setter Property="Foreground" Value="{StaticResource ZInk}"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ComboBoxItem">
+          <Border x:Name="Box" Background="Transparent" CornerRadius="3" Padding="10,7">
+            <ContentPresenter><ContentPresenter.Resources><Style TargetType="TextBlock"/></ContentPresenter.Resources></ContentPresenter>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsHighlighted" Value="True">
+              <Setter TargetName="Box" Property="Background" Value="{StaticResource ZPanelHover}"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+              <Setter Property="Foreground" Value="{StaticResource ZGoldBright}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="ZChoice" TargetType="ComboBox">
+    <Setter Property="Height" Value="36"/>
+    <Setter Property="MinWidth" Value="210"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Foreground" Value="{StaticResource ZInk}"/>
+    <Setter Property="ItemContainerStyle" Value="{StaticResource ZChoiceItem}"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ComboBox">
+          <Grid>
+            <ToggleButton Focusable="False" ClickMode="Press"
+                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+              <ToggleButton.Template>
+                <ControlTemplate TargetType="ToggleButton">
+                  <Border x:Name="Box" Background="{StaticResource ZWell}" BorderBrush="{StaticResource ZGoldDim}" BorderThickness="1" CornerRadius="4">
+                    <Path Data="M0,0 L4.5,4.5 L9,0" Stroke="{StaticResource ZGold}" StrokeThickness="1.5" HorizontalAlignment="Right"
+                          VerticalAlignment="Center" Margin="0,0,12,0"/>
+                  </Border>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ZGold}"/>
+                    </Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </ToggleButton.Template>
+            </ToggleButton>
+            <Border x:Name="Focus" BorderBrush="{StaticResource ZGoldBright}" BorderThickness="2" CornerRadius="4" Opacity="0" IsHitTestVisible="False"/>
+            <ContentPresenter IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" VerticalAlignment="Center" Margin="12,0,30,0"><ContentPresenter.Resources><Style TargetType="TextBlock"/></ContentPresenter.Resources></ContentPresenter>
+            <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+              <Border Background="{StaticResource ZPanel}" BorderBrush="{StaticResource ZGoldDim}" BorderThickness="1" CornerRadius="4" Padding="4"
+                      Margin="0,4,0,0" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="320">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                  <ItemsPresenter/>
+                </ScrollViewer>
+              </Border>
+            </Popup>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+              <Setter TargetName="Focus" Property="Opacity" Value="1"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- a scale: Sharpness, Mouse sensitivity -->
+  <Style x:Key="ZThumb" TargetType="Thumb">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Thumb">
+          <Grid Width="18" Height="18" Background="Transparent">
+            <Path Data="M9,0 L18,9 L9,18 L0,9 Z" Fill="{StaticResource ZGoldLeaf}" Stroke="#FFF3D98F" StrokeThickness="1"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="ZSliderStep" TargetType="RepeatButton">
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="ZSlider" TargetType="Slider">
+    <Setter Property="Width" Value="210"/>
+    <Setter Property="IsSnapToTickEnabled" Value="True"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Slider">
+          <Grid Height="26">
+            <Border x:Name="Rail" Height="4" CornerRadius="2" Background="{StaticResource ZWell}" BorderBrush="{StaticResource ZGoldLine}" BorderThickness="1"/>
+            <Track x:Name="PART_Track">
+              <Track.DecreaseRepeatButton>
+                <RepeatButton Style="{StaticResource ZSliderStep}" Command="Slider.DecreaseLarge">
+                  <RepeatButton.Template>
+                    <ControlTemplate TargetType="RepeatButton">
+                      <Border Height="4" CornerRadius="2" Background="{StaticResource ZGold}"/>
+                    </ControlTemplate>
+                  </RepeatButton.Template>
+                </RepeatButton>
+              </Track.DecreaseRepeatButton>
+              <Track.IncreaseRepeatButton>
+                <RepeatButton Style="{StaticResource ZSliderStep}" Command="Slider.IncreaseLarge"/>
+              </Track.IncreaseRepeatButton>
+              <Track.Thumb><Thumb Style="{StaticResource ZThumb}"/></Track.Thumb>
+            </Track>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Rail" Property="BorderBrush" Value="{StaticResource ZGoldBright}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- a binding: click, then press -->
+  <Style x:Key="ZBind" TargetType="Button">
+    <Setter Property="Foreground" Value="{StaticResource ZInk}"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Height" Value="32"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Background" Value="{StaticResource ZWell}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource ZGoldLine}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Box" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="4"
+                  Padding="10,0">
+            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"><ContentPresenter.Resources><Style TargetType="TextBlock"/></ContentPresenter.Resources></ContentPresenter>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ZGold}"/>
+              <Setter TargetName="Box" Property="Background" Value="{StaticResource ZPanelHover}"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ZGoldBright}"/>
+              <Setter TargetName="Box" Property="BorderThickness" Value="2"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Box" Property="Background" Value="Transparent"/>
+              <Setter TargetName="Box" Property="BorderBrush" Value="Transparent"/>
+              <Setter Property="Foreground" Value="{StaticResource ZInkFaint}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- thin gold scroll bars -->
+  <Style TargetType="ScrollBar">
+    <Setter Property="Width" Value="8"/>
+    <Setter Property="MinWidth" Value="8"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ScrollBar">
+          <Track x:Name="PART_Track" IsDirectionReversed="True">
+            <Track.Thumb>
+              <Thumb>
+                <Thumb.Template>
+                  <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="T" CornerRadius="3" Background="{StaticResource ZGoldLine}" Margin="1,2"/>
+                    <ControlTemplate.Triggers>
+                      <Trigger Property="IsMouseOver" Value="True">
+                        <Setter TargetName="T" Property="Background" Value="{StaticResource ZGoldDim}"/>
+                      </Trigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </Thumb.Template>
+              </Thumb>
+            </Track.Thumb>
+          </Track>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="ZMenu" TargetType="ContextMenu">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContextMenu">
+          <Border Background="{StaticResource ZPanel}" BorderBrush="{StaticResource ZGoldDim}" BorderThickness="1" CornerRadius="4" Padding="4">
+            <ItemsPresenter/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="ZMenuItem" TargetType="MenuItem">
+    <Setter Property="Foreground" Value="{StaticResource ZInk}"/>
+    <Setter Property="FontFamily" Value="{StaticResource Ui}"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="MenuItem">
+          <Border x:Name="Box" Background="Transparent" CornerRadius="3" Padding="12,6" MinWidth="200">
+            <ContentPresenter ContentSource="Header"><ContentPresenter.Resources><Style TargetType="TextBlock"/></ContentPresenter.Resources></ContentPresenter>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsHighlighted" Value="True">
+              <Setter TargetName="Box" Property="Background" Value="{StaticResource ZPanelHover}"/>
+              <Setter Property="Foreground" Value="{StaticResource ZGoldBright}"/>
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter Property="Foreground" Value="{StaticResource ZGold}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+</ResourceDictionary>

@@ -24,11 +24,13 @@
     <DebugType>none</DebugType>
   </PropertyGroup>
 
-  <!-- Inter (SIL Open Font License, Fonts/Inter-LICENSE.txt) and the hookshot, inside the app -->
+  <!-- Inter and Cinzel (SIL Open Font License, Fonts/*-LICENSE.txt) and the hookshot, inside the app -->
   <ItemGroup>
     <Resource Include="Fonts\*.ttf" />
     <Resource Include="Images\hookshot.png" />
+    <Resource Include="Images\launcher-forest.jpg" />
     <None Include="Fonts\Inter-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Fonts\Cinzel-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -90,12 +90,12 @@ public partial class MainWindow : Window
             Updater.FromCommandLine(this);
             return;
         }
-        if (LaunchArg() is { } launchFolder)   // (Hookshot Launcher.exe in the game folder)
+        if (LauncherUpdate is { } update)   // (the launcher's Update button: Launcher/LauncherWindow.xaml.cs)
         {
-            SplashText.Text = "Starting Hookshot…";
+            SplashText.Text = "Getting the update…";
             await Task.Delay(700);
             ShowMain();
-            ShowLauncher(launchFolder);
+            Updater.UpdateFolder(this, update.Folder, update.Tag, fetched: false);
             return;
         }
         SplashText.Text = "Looking for your game files…";
@@ -122,7 +122,7 @@ public partial class MainWindow : Window
     bool sourcePicked;   // (the player chose game files here: a build from them, even over a game that is up to date)
 
     /// The release a game folder was built with (its hookshot_version.txt), when it keeps its game files for updates
-    static string? GameVersion(string folder)
+    internal static string? GameVersion(string folder)
     {
         try
         {
@@ -176,42 +176,11 @@ public partial class MainWindow : Window
         AboutText.Visibility = mode is Mode.Build ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    // ---- the launcher: Hookshot Launcher.exe in a game folder starts this with --launch <folder> (builder/setup/setup.c) ----
-    string launchFolder = "";
-
-    static string? LaunchArg()
-    {
-        var a = Environment.GetCommandLineArgs();
-        var i = Array.IndexOf(a, "--launch");
-        return i >= 0 && i + 1 < a.Length ? a[i + 1].TrimEnd('\\', '/') : null;
-    }
-
-    async void ShowLauncher(string folder)
-    {
-        launchFolder = folder;
-        OutPath.Text = folder;
-        StepPill.Visibility = Visibility.Collapsed;
-        var game = GameVersion(folder) ?? ReadVersion(folder);
-        LaunchVersion.Text = (game != null ? $"Hookshot {game}" : "Hookshot") + " · " + folder;
-        LaunchPlay.IsEnabled = File.Exists(GameExe(folder));
-        ShowPage(LaunchPage);
-        latestTag = Environment.GetEnvironmentVariable("HOOKSHOT_LATEST_TAG") is { Length: > 0 } fake ? (fake == "none" ? null : fake) : await Updater.LatestTag();
-        updateTarget = latestTag ?? Tools.Find()?.Version;   // (GitHub's newest, else this builder's own)
-        if (updateTarget == null) LaunchStatus.Text = "Could not check for updates (GitHub did not answer)";
-        else if (game != null && game != updateTarget && GameVersion(folder) != null)
-        {
-            LaunchStatus.Text = $"Update available: {updateTarget}";
-            LaunchStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xB9, 0xC8, 0xFF));
-            LaunchStatus.FontWeight = FontWeights.SemiBold;
-            LaunchUpdate.Visibility = Visibility.Visible;
-        }
-        else if (game != null && game != updateTarget)
-            LaunchStatus.Text = $"{updateTarget} is out: build this folder again with the Hookshot Builder to get it";
-        else LaunchStatus.Text = latestTag == null ? "Up to date with this builder (GitHub did not answer)" : "Up to date";
-    }
+    // ---- the launcher (Launcher/LauncherWindow.xaml) hands its Update button to this window: the folder and the release ----
+    public (string Folder, string? Tag)? LauncherUpdate { get; init; }
 
     /// (a folder built before it kept its game files has a version too: only shown)
-    static string? ReadVersion(string folder)
+    internal static string? ReadVersion(string folder)
     {
         try
         {
@@ -223,30 +192,19 @@ public partial class MainWindow : Window
     }
 
     /// The game in a folder: bin\hookshot.exe below its launcher (hookshot.exe), or hookshot.exe in a folder built before the launcher
-    static string GameExe(string folder)
+    internal static string GameExe(string folder)
     {
         var game = System.IO.Path.Combine(folder, "bin", "hookshot.exe");
         return File.Exists(game) ? game : System.IO.Path.Combine(folder, "hookshot.exe");
     }
 
     /// (the launcher already checked for updates: the game does not ask again)
-    static void StartGame(string folder)
+    internal static void StartGame(string folder)
     {
         var si = new ProcessStartInfo(GameExe(folder)) { UseShellExecute = false, WorkingDirectory = folder };
         si.Environment["HOOKSHOT_NO_UPDATE_CHECK"] = "1";
         Process.Start(si);
     }
-
-    void LaunchUpdateClick(object sender, RoutedEventArgs e) => Updater.UpdateFolder(this, launchFolder, updateTarget, fetched: false);
-
-    void LaunchPlayClick(object sender, RoutedEventArgs e)
-    {
-        StartGame(launchFolder);
-        Application.Current.Shutdown();
-    }
-
-    void LaunchFolderClick(object sender, RoutedEventArgs e) =>
-        Process.Start(new ProcessStartInfo(launchFolder) { UseShellExecute = true });
 
     // ---- what the player chose last time (the install folder, the game files): builder-settings.json beside the versions ----
     sealed class BuilderSettings
@@ -402,7 +360,7 @@ public partial class MainWindow : Window
 
     void ShowPage(FrameworkElement page)
     {
-        foreach (var p in new FrameworkElement[] { FilesPage, BuildPage, ReadyPage, ProblemPage, LaunchPage })
+        foreach (var p in new FrameworkElement[] { FilesPage, BuildPage, ReadyPage, ProblemPage })
             p.Visibility = p == page ? Visibility.Visible : Visibility.Collapsed;
         page.Opacity = 0;
         page.BeginAnimation(OpacityProperty, new DoubleAnimation(1, TimeSpan.FromMilliseconds(250)));

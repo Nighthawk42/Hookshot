@@ -259,27 +259,6 @@
           </StackPanel>
         </StackPanel>
 
-        <!-- ===== the launcher (Hookshot Launcher.exe in the game folder, started with launch and its folder) ===== -->
-        <StackPanel x:Name="LaunchPage" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
-          <TextBlock Style="{StaticResource Label}" Text="THE LEGEND OF ZELDA" HorizontalAlignment="Center"/>
-          <TextBlock Style="{StaticResource Heading}" Text="Ocarina of Time" HorizontalAlignment="Center" FontSize="34" Margin="0,4,0,0"/>
-          <TextBlock x:Name="LaunchVersion" Style="{StaticResource Sub}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,8,0,0"/>
-          <TextBlock x:Name="LaunchStatus" FontSize="13" Foreground="{StaticResource InkSoft}" Text="Checking for updates…"
-                     HorizontalAlignment="Center" Margin="0,16,0,0"/>
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,28,0,0">
-            <Button x:Name="LaunchUpdate" Style="{StaticResource Primary}" Height="50" Padding="26,0" Margin="0,0,12,0" Content="Update"
-                    Visibility="Collapsed" Click="LaunchUpdateClick"/>
-            <Button x:Name="LaunchPlay" Style="{StaticResource GoButton}" Click="LaunchPlayClick">
-              <StackPanel Orientation="Horizontal">
-                <Path Data="M0,0 L11,7 L0,14 Z" Fill="{StaticResource GoInk}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBlock Text="Play" FontSize="16" FontWeight="Bold" Foreground="{StaticResource GoInk}"/>
-              </StackPanel>
-            </Button>
-          </StackPanel>
-          <Button x:Name="LaunchFolder" Style="{StaticResource LinkButton}" Foreground="{StaticResource InkFaint}" HorizontalAlignment="Center"
-                  Margin="0,22,0,0" Content="Open the game folder" Click="LaunchFolderClick"/>
-        </StackPanel>
-
         <!-- ===== when something goes wrong ===== -->
         <Grid x:Name="ProblemPage" Visibility="Collapsed">
           <Grid.RowDefinitions>
