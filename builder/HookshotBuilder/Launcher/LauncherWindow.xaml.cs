@@ -32,6 +32,7 @@ public partial class LauncherWindow : Window
         InitializeComponent();
         Eyebrow.Text = Spaced("The Legend of Zelda");
         gpus = GameFolder.Gpus(folder);
+        SdlPads.Start(folder);   // (early: SDL takes a moment to find the controllers)
         string? loadProblem = null;
         try { opts = GameOptions.Load(folder); }
         catch (Exception e)
@@ -535,7 +536,7 @@ public partial class LauncherWindow : Window
         if (SystemParameters.ClientAreaAnimation)
             cell.BeginAnimation(OpacityProperty, new DoubleAnimation(0.55, 1, TimeSpan.FromMilliseconds(600)) { AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever });
         if (kind == Listen.Pad && !Pad.Connected())
-            BindHint.Text = "No XInput controller found. Connect one, or right-click the box to pick the button from a list.";
+            BindHint.Text = "No controller found. Connect one (Xbox, PlayStation, Switch Pro and most others work), or right-click the box to pick the button from a list.";
         padArmed = false;
         if (!padTimerHooked) { padTimer.Tick += PadTick; padTimerHooked = true; }
         padTimer.Start();
