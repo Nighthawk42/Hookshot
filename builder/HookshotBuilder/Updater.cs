@@ -72,35 +72,138 @@ static class Updater
         return null;
     }
 
-    /// The latest release's setup (HookshotBuilder.exe) downloaded and started with args: it installs the new builder (only the
-    /// parts that changed) and starts it with the same args; this one closes. (no args: the new builder opens as it does)
+    /// The latest release installed (only the parts that changed, as its setup would) and its builder started with args; this one
+    /// closes. (no args: the new builder opens as it does)
     public static async Task RunLatestSetup(MainWindow w, IEnumerable<string> args)
     {
         var token = w.DownloadToken;
         using var http = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
         http.DefaultRequestHeaders.UserAgent.ParseAdd("HookshotBuilder");
         w.Note("Asking GitHub for the latest release");
-        string? setupUrl = null, setupApiUrl = null;
-        long setupSize = 0;
+        string? listUrl = null, listApiUrl = null;
         using (var response = await GetWithRetries(w, http, Latest, token, "application/vnd.github+json", TimeSpan.FromSeconds(30)))
         using (var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token)))
             foreach (var asset in doc.RootElement.GetProperty("assets").EnumerateArray())
-                if (asset.GetProperty("name").GetString() == SetupAsset)
+                if (asset.GetProperty("name").GetString() == SetupList)
                 {
-                    setupUrl = asset.GetProperty("browser_download_url").GetString();
-                    setupApiUrl = asset.GetProperty("url").GetString();
-                    setupSize = asset.GetProperty("size").GetInt64();
+                    listUrl = asset.GetProperty("browser_download_url").GetString();
+                    listApiUrl = asset.GetProperty("url").GetString();
                 }
-        if (setupUrl == null) throw new InvalidOperationException("The latest release has no " + SetupAsset + ".");
-        var cache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HookshotBuilder", "update");
-        Directory.CreateDirectory(cache);
-        var setup = Path.Combine(cache, SetupAsset);
+        if (listUrl == null) throw new InvalidOperationException("The latest release has no " + SetupList + ".");
         w.Note("Downloading the new Hookshot Builder");
-        await DownloadWithRetries(w, http, setupUrl, setupApiUrl, setup, setupSize, token);
-        var si = new ProcessStartInfo(setup) { UseShellExecute = false, WorkingDirectory = cache };
+        var tag = await Install(w, http, listUrl, listApiUrl, token);
+        var exe = Path.Combine(VersionDir(tag), "HookshotBuilder", "HookshotBuilder.exe");
+        var si = new ProcessStartInfo(exe) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(exe)! };
         foreach (var arg in args) si.ArgumentList.Add(arg);
         Process.Start(si);
         Application.Current.Shutdown();
+    }
+
+    static string AppData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HookshotBuilder");
+
+    static string VersionDir(string tag) =>
+        Path.Combine(AppData, "versions", string.Concat(tag.Where(c => char.IsLetterOrDigit(c) || c == '-' || c == '_' || c == '.')));
+
+    /// A release's build tools as installed under versions\<tag> (by Install or by the setup), when complete
+    internal static Tools? InstalledTools(string tag)
+    {
+        var dir = VersionDir(tag);
+        var root = Path.Combine(dir, "HookshotBuilder", "tools");
+        var python = Path.Combine(root, "python", "python.exe");
+        if (!File.Exists(Path.Combine(dir, "installed.txt")) || !File.Exists(Path.Combine(root, "nx2", "make_game.py")) || !File.Exists(python))
+            return null;
+        var tools = new Tools(root, python);
+        return tools.Version == tag ? tools : null;
+    }
+
+    sealed record Part(string Sha, long Size, string Dest, string From, string To, string Url);
+
+    /// What the release's setup does (builder/setup/setup.c), done here: its list (hookshot-setup.txt) read, each part reused from
+    /// downloads\ when its SHA-256 matches or downloaded and checked, unpacked into versions\<tag>.part and renamed once complete,
+    /// current.txt and previous.txt kept as the setup keeps them. The list's tag is returned.
+    static async Task<string> Install(MainWindow w, HttpClient http, string listUrl, string? listApiUrl, CancellationToken token)
+    {
+        var downloads = Path.Combine(AppData, "downloads");
+        var versions = Path.Combine(AppData, "versions");
+        var cache = Path.Combine(AppData, "update");
+        Directory.CreateDirectory(downloads);
+        Directory.CreateDirectory(versions);
+        Directory.CreateDirectory(cache);
+        var listPath = Path.Combine(cache, SetupList);
+        await DownloadWithRetries(w, http, listUrl, listApiUrl, listPath, 0, token);
+
+        string? tag = null, run = null;
+        var parts = new List<Part>();
+        foreach (var line in await File.ReadAllLinesAsync(listPath, token))
+        {
+            var f = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (f.Length >= 2 && f[0] == "tag") tag = f[1];
+            else if (f.Length >= 2 && f[0] == "run") run = f[1];
+            else if (f.Length >= 7 && f[0] == "part" && long.TryParse(f[2], out var size))
+                parts.Add(new Part(f[1].ToLowerInvariant(), size, f[3], f[4], f[5], f[6]));
+        }
+        if (tag == null || run == null || parts.Count == 0) throw new InvalidOperationException("The release's setup list could not be read. Try again later.");
+
+        var final = VersionDir(tag);
+        if (InstalledTools(tag) != null && File.Exists(Path.Combine(final, run.Replace('/', '\\')))) return tag;
+        var staging = final + ".part";
+        if (Directory.Exists(staging)) Directory.Delete(staging, true);
+        if (Directory.Exists(final)) Directory.Delete(final, true);
+        Directory.CreateDirectory(staging);
+        for (var i = 0; i < parts.Count; i++)
+        {
+            var p = parts[i];
+            var k = i;
+            var zip = Path.Combine(downloads, p.Sha + ".zip");
+            if (!(File.Exists(zip) && await Sha256(zip, token) == p.Sha))
+            {
+                w.Note($"Downloading part {k + 1} of {parts.Count} ({p.Size >> 20} MB)");
+                var temp = zip + ".part";
+                await DownloadWithRetries(w, http, p.Url, null, temp, p.Size, token, f => w.DownloadProgress((k + f) / parts.Count));
+                if (await Sha256(temp, token) != p.Sha)
+                {
+                    File.Delete(temp);
+                    throw new InvalidDataException($"Part {k + 1} of {parts.Count} did not download correctly (its checksum differs). Try again.");
+                }
+                File.Move(temp, zip, true);
+            }
+            w.Note($"Unpacking part {k + 1} of {parts.Count}");
+            var dest = p.Dest == "." ? staging : Path.Combine(staging, p.Dest.Replace('/', '\\'));
+            Directory.CreateDirectory(dest);
+            await Task.Run(() => ZipFile.ExtractToDirectory(zip, dest, overwriteFiles: true), token);
+            if (p.From != "-" && p.To != "-")   // (llvm-mingw-<version>-ucrt-x86_64 -> llvm-mingw)
+            {
+                var to = Path.Combine(dest, p.To);
+                if (!Directory.Exists(to)) Directory.Move(Path.Combine(dest, p.From), to);
+            }
+            w.DownloadProgress((k + 1.0) / parts.Count);
+        }
+        var exe = Path.Combine(staging, run.Replace('/', '\\'));
+        if (!File.Exists(exe)) throw new FileNotFoundException($"The builder is missing after unpacking ({exe}). Your antivirus may have removed it.");
+        Directory.Move(staging, final);
+        File.WriteAllText(Path.Combine(final, "installed.txt"), tag);
+
+        // (as the setup's prune(): the version just installed and the one before it stay; older versions and their downloads go)
+        var current = Path.Combine(versions, "current.txt");
+        var before = File.Exists(current) ? File.ReadAllText(current).Trim() : "";
+        if (before.Length > 0 && before != tag) File.WriteAllText(Path.Combine(versions, "previous.txt"), before);
+        File.WriteAllText(current, tag);
+        var keep = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { Path.GetFileName(final) };
+        if (before.Length > 0) keep.Add(Path.GetFileName(VersionDir(before)));
+        foreach (var dir in Directory.GetDirectories(versions))
+            if (!keep.Contains(Path.GetFileName(dir)))
+                try { Directory.Delete(dir, true); } catch (Exception) { }
+        var wanted = new HashSet<string>(parts.Select(p => p.Sha + ".zip"), StringComparer.OrdinalIgnoreCase);
+        foreach (var file in Directory.GetFiles(downloads))
+            if (!wanted.Contains(Path.GetFileName(file)))
+                try { File.Delete(file); } catch (Exception) { }
+        return tag;
+    }
+
+    static async Task<string> Sha256(string path, CancellationToken token)
+    {
+        await using var s = File.OpenRead(path);
+        return Convert.ToHexString(await System.Security.Cryptography.SHA256.HashDataAsync(s, token)).ToLowerInvariant();
     }
 
     /// The game in folder built again with the latest release: here when these tools are it (or fetched), else after the setup
@@ -127,16 +230,20 @@ static class Updater
             w.UpdateBuild(tools, folder);
             return;
         }
+        // (that release already installed under versions\, by an update before this one or by the setup: its tools build the folder)
+        if (tag != null && InstalledTools(tag) is { } installed)
+        {
+            w.UpdateBuild(installed, folder);
+            return;
+        }
         try
         {
             var token = w.DownloadToken;
             using var http = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
             http.DefaultRequestHeaders.UserAgent.ParseAdd("HookshotBuilder");
             w.Note("Asking GitHub for the latest release");
-            string? newTag = null, url = null, setupUrl = null;
-            string? apiUrl = null, setupApiUrl = null;
-            long size = 0, setupSize = 0;
-            var hasList = false;
+            string? newTag = null, url = null, apiUrl = null, listUrl = null, listApiUrl = null;
+            long size = 0;
             using (var response = await GetWithRetries(w, http, Latest, token, "application/vnd.github+json", TimeSpan.FromSeconds(30)))
             using (var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token)))
             {
@@ -150,35 +257,40 @@ static class Updater
                         apiUrl = asset.GetProperty("url").GetString();
                         size = asset.GetProperty("size").GetInt64();
                     }
-                    else if (assetName == SetupAsset)
+                    else if (assetName == SetupList)
                     {
-                        setupUrl = asset.GetProperty("browser_download_url").GetString();
-                        setupApiUrl = asset.GetProperty("url").GetString();
-                        setupSize = asset.GetProperty("size").GetInt64();
+                        listUrl = asset.GetProperty("browser_download_url").GetString();
+                        listApiUrl = asset.GetProperty("url").GetString();
                     }
-                    else if (assetName == SetupList) hasList = true;
                 }
             }
-            if (newTag == null || (url == null && setupUrl == null)) throw new InvalidOperationException("The latest release has no " + Asset + ".");
+            if (newTag == null || (url == null && listUrl == null)) throw new InvalidOperationException("The latest release has no " + Asset + ".");
             if (newTag == tools.Version)
             {
                 w.UpdateBuild(tools, folder);
                 return;
             }
+            if (InstalledTools(newTag) is { } have)
+            {
+                w.UpdateBuild(have, folder);
+                return;
+            }
             var name = string.Concat(newTag.Where(c => char.IsLetterOrDigit(c) || c == '-' || c == '_' || c == '.'));
             var cache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "HookshotBuilder", "update");
             Directory.CreateDirectory(cache);
-            // (a release with the setup and its list: the setup downloads only the parts that changed since the version installed (a few MB
-            // when only the builder's code did), checks them and starts the new builder with these arguments. The whole zip is the fallback)
-            if (setupUrl != null && hasList)
+            // (a release with the setup's list: its parts installed here, as the setup would (only the parts that changed are downloaded),
+            // and the folder built with that release's tools by this app, so the folder's update offer keeps coming back to this builder
+            // and its launcher. The setup itself is not run: Defender's heuristic quarantines it, Trojan:Win32/Sabsik.FL.A!ml, 2026-11-09)
+            if (listUrl != null)
             {
                 w.Note($"Downloading the update for {newTag}");
-                var setup = Path.Combine(cache, SetupAsset);
-                await DownloadWithRetries(w, http, setupUrl, setupApiUrl, setup, setupSize, token);
-                var ssi = new ProcessStartInfo(setup) { UseShellExecute = false, WorkingDirectory = cache };
-                foreach (var arg in new[] { "--update", folder, "--tag", newTag, "--fetched" }) ssi.ArgumentList.Add(arg);
-                Process.Start(ssi);
-                Application.Current.Shutdown();
+                var listed = await Install(w, http, listUrl, listApiUrl, token);
+                if (listed != newTag)
+                {
+                    w.DownloadFailed($"The update list is for {listed}, not {newTag}: GitHub's download links can lag right after a release. Try Update again in a few minutes.");
+                    return;
+                }
+                w.UpdateBuild(InstalledTools(newTag) ?? throw new InvalidOperationException($"{newTag} was installed but its build tools are incomplete."), folder);
                 return;
             }
             if (url == null) throw new InvalidOperationException("The latest release has no " + Asset + ".");
